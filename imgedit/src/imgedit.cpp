@@ -188,15 +188,15 @@ void imgedit::edit()
             }
             if (w_chkbox->checkState() == Qt::Checked
              && h_chkbox->checkState() == Qt::Checked) {
-                img = img.scaled(w_le->text().toInt(), h_le->text().toInt(), Qt::IgnoreAspectRatio);
+                img = img.scaled(w_le->text().toInt(), h_le->text().toInt(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             }
             else if (w_chkbox->checkState() != Qt::Checked
                   && h_chkbox->checkState() == Qt::Checked) {
-                img = img.scaledToHeight(h_le->text().toInt());
+                img = img.scaledToHeight(h_le->text().toInt(), Qt::SmoothTransformation);
             }
             else if (w_chkbox->checkState() == Qt::Checked
                   && h_chkbox->checkState() != Qt::Checked) {
-                img = img.scaledToWidth(w_le->text().toInt());
+                img = img.scaledToWidth(w_le->text().toInt(), Qt::SmoothTransformation);
             }
 
             img.save(thumb_ap);
