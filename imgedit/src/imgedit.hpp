@@ -26,12 +26,13 @@ public:
 private:
     QStringList argv;
     int argc;
-
     QString path;
-
     const int default_width = 300;
-
     QIntValidator *int_validator;
+    int width;
+    int height;
+    bool thumb;
+    bool ovrrd;
 
     QCheckBox *w_chkbox;
     QCheckBox *h_chkbox;

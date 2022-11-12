@@ -7,14 +7,39 @@ imgedit::imgedit(QWidget *parent)
     argc = argv.size();
 
     qDebug() << argc << argv;
-    if (argc < 2) {
-        qDebug() << "引数が少い。";
-        QMessageBox::critical(this, tr("致命的エラー"), tr("引数が少い。"));
-        //exit(1);
+    if (argc <= 1) {
+        qDebug() << "引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)";
+        QMessageBox::critical(this, tr("致命的エラー") + QString::number(argc), tr("引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)"));
+        exit(1);
     }
 
-    if (argc > 2) {
+    if (3 <= argc && argc <= 5) {
+        qDebug() << "引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)";
+        QMessageBox::critical(this, tr("致命的エラー") + QString::number(argc), tr("引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)"));
+        exit(1);
+    }
 
+    if (argc == 6) {
+        bool ok[4] = {false};
+        width = QString(argv[2]).toInt(&ok[0]);
+        height = QString(argv[3]).toInt(&ok[1]);
+        thumb = QString(argv[4]).toInt(&ok[2]);
+        ovrrd = QString(argv[5]).toInt(&ok[3]);
+        for (int i = 0; i < 4; i++) {
+            if (!ok[i]) {
+                qDebug() << "引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)";
+                QMessageBox::critical(this, tr("致命的エラー 入力は全て整数値で"), tr("引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)"));
+                exit(1);
+            }
+        }
+        edit();
+        exit(0);
+    }
+
+    if (argc > 6) {
+        qDebug() << "引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)";
+        QMessageBox::critical(this, tr("致命的エラー") + QString::number(argc), tr("引数は ページソース {横(指定しない場合は0) 縦(指定しない場合は0) サムネイル生成するか(0,1) 既存を上書きするか(0,1) }(省略可)"));
+        exit(1);
     }
 
     int_validator = new QIntValidator();
@@ -90,6 +115,16 @@ void imgedit::h_chkbox_state_changed()
 
 void imgedit::exec_btn_pressed()
 {
+    width = w_le->text().toInt();
+    height = h_le->text().toInt();
+    if (w_chkbox->checkState() != Qt::Checked) {
+        width = 0;
+    }
+    if (h_chkbox->checkState() != Qt::Checked) {
+        height = 0;
+    }
+    thumb = generate_thumbnail_chkbox->checkState() == Qt::Checked;
+    ovrrd = override_existing_imgs_chkbox->checkState() == Qt::Checked;
     edit();
     exit(0);
 }
@@ -147,7 +182,7 @@ void imgedit::edit()
     }
     for (const QString p : img_params) {
         QString new_param = p;
-        if (override_existing_imgs_chkbox->checkState() == Qt::Checked) {
+        if (ovrrd) {
             /* 置換するために?から}}の手前までの文字列を取得する必要があるにより正規表現を用ゐる。 */
             QRegularExpression param_re("\\?[^(}})]+");
             QRegularExpressionMatch param_match = param_re.match(p);
@@ -179,36 +214,33 @@ void imgedit::edit()
         QString img_ap = source_dir_ap + img_rp_fi.fileName();
 
         QString adding_params = "?href=" + img_rp;
-        if (generate_thumbnail_chkbox->checkState() == Qt::Checked) {
+        if (thumb) {
             QImage img(img_ap);
             if (img.isNull()) {
                 qDebug() << img_ap << "is null.";
                 QMessageBox::critical(this, "FATAL ERROR", img_ap + " is null.");
                 exit(1);
             }
-            if (w_chkbox->checkState() == Qt::Checked
-             && h_chkbox->checkState() == Qt::Checked) {
-                img = img.scaled(w_le->text().toInt(), h_le->text().toInt(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            if (width != 0 && height != 0) {
+                img = img.scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             }
-            else if (w_chkbox->checkState() != Qt::Checked
-                  && h_chkbox->checkState() == Qt::Checked) {
-                img = img.scaledToHeight(h_le->text().toInt(), Qt::SmoothTransformation);
+            else if (width == 0 && height != 0) {
+                img = img.scaledToHeight(height, Qt::SmoothTransformation);
             }
-            else if (w_chkbox->checkState() == Qt::Checked
-                  && h_chkbox->checkState() != Qt::Checked) {
-                img = img.scaledToWidth(w_le->text().toInt(), Qt::SmoothTransformation);
+            else if (width != 0 && height == 0) {
+                img = img.scaledToWidth(width, Qt::SmoothTransformation);
             }
 
             img.save(thumb_ap);
             new_param.replace(img_rp, thumb_rp);
         }
         else {
-            if (w_chkbox->checkState() == Qt::Checked) {
-                adding_params += ("&width=" + w_le->text());
+            if (width != 0) {
+                adding_params += ("&width=" + QString::number(width));
 
             }
-            if (h_chkbox->checkState() == Qt::Checked) {
-                adding_params += ("&height=" + h_le->text());
+            if (height != 0) {
+                adding_params += ("&height=" + QString::number(height));
             }
         }
         new_param += adding_params;
