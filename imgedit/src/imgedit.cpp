@@ -177,6 +177,10 @@ void imgedit::edit()
     while (i.hasNext()) {
         QRegularExpressionMatch match = i.next();
         QString img_param = match.captured(0);
+        if (img_param.startsWith("{{id: ")) {
+            // アンカーは除外
+            continue;
+        }
         img_params << img_param;
         qDebug() << img_param;
     }
