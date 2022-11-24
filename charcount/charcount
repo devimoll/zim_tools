@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gdialog --title "文字数" --infobox "`echo -n $1 | sed -z 's/\n//g; s/ //g; s/　//g' | wc -m`" 0 0
