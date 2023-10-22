@@ -177,8 +177,8 @@ void imgedit::edit()
     while (i.hasNext()) {
         QRegularExpressionMatch match = i.next();
         QString img_param = match.captured(0);
+        // アンカーは除外
         if (img_param.startsWith("{{id: ")) {
-            // アンカーは除外
             continue;
         }
         img_params << img_param;
@@ -186,16 +186,7 @@ void imgedit::edit()
     }
     for (const QString p : img_params) {
         QString new_param = p;
-        if (ovrrd) {
-            /* 置換するために?から}}の手前までの文字列を取得する必要があるにより正規表現を用ゐる。 */
-            QRegularExpression param_re("\\?[^(}})]+");
-            QRegularExpressionMatch param_match = param_re.match(p);
-            if (param_match.hasMatch()) {
-                new_param.replace(param_match.captured(0), "");
-                qDebug() << new_param;
-            }
-        }
-        else {
+        if (!ovrrd) {
             if (p.contains("?")) {
                 /* ファイル名に?がある場合そもそもzim側がファイル名は最初の?までと認識してしまふから
                     ifの条件はこれでよい。*/
@@ -203,8 +194,16 @@ void imgedit::edit()
                 continue;
             }
         }
+        /* 正規表現を用ゐて?から}}の手前までの文字列を取得し、overrideのため取得した文字列部分を無に置換してhref情報を削除する。 */
+        QRegularExpression param_re("\\?[^(}})]+");
+        QRegularExpressionMatch param_match = param_re.match(p);
+        if (param_match.hasMatch()) {
+        new_param.replace(param_match.captured(0), "");
+        qDebug() << new_param;
+        }
         QString thumbnail_suffix = "__thumb";
         new_param.replace(thumbnail_suffix, "");
+
         QString img_rp = new_param;
         img_rp.replace("{{", "");
         img_rp.replace("}}", "");
