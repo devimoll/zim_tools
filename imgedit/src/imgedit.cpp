@@ -212,12 +212,20 @@ void imgedit::edit()
         QString img_extension = img_rp_fi.suffix();
         qDebug() << new_param << img_rp << img_basename;
         QString source_dir_ap = QFileInfo(source).path() + "/" + QFileInfo(source).completeBaseName() + "/";
-        QString thumb_ap = source_dir_ap + img_basename + thumbnail_suffix + "." + img_extension;
-        QString thumb_rp = "./" + img_basename + thumbnail_suffix + "." + img_extension;
         QString img_ap = source_dir_ap + img_rp_fi.fileName();
 
         QString adding_params = "?href=" + img_rp;
         if (thumb) {
+            QString thumbs_dir_ap = source_dir_ap + "_thumbs/";
+            if (QDir(thumbs_dir_ap).exists() == false) {
+                if (QDir().mkdir(thumbs_dir_ap) == false) {
+                    QMessageBox::critical(this, "FATAL ERROR", " " + QString(__FILE__) + ":" + QString::number(__LINE__) + "QDir().mkdir(thumbs_dir_ap)");
+                }
+            }
+            QString thumb_ap = thumbs_dir_ap + img_basename + thumbnail_suffix + "." + img_extension;
+            QString thumb_rp = thumb_ap;
+            thumb_rp.replace(source_dir_ap, "./");
+
             QImage img(img_ap);
             if (img.isNull()) {
                 qDebug() << img_ap << "is null.";

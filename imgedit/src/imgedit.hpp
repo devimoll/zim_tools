@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QIntValidator>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
