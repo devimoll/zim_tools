@@ -201,22 +201,36 @@ void imgedit::edit()
         new_param.replace(param_match.captured(0), "");
         qDebug() << new_param;
         }
+
+        QString source_dir_ap = QFileInfo(source).path() + "/" + QFileInfo(source).completeBaseName() + "/";
+
         QString thumbnail_suffix = "__thumb";
         new_param.replace(thumbnail_suffix, "");
+        QString thumbs_dir_name = "_thumbs";
+        new_param.replace(thumbs_dir_name + "/", "");
+        QString img_path = new_param;
+        img_path.replace("{{", "");
+        img_path.replace("}}", "");
 
-        QString img_rp = new_param;
-        img_rp.replace("{{", "");
-        img_rp.replace("}}", "");
-        QFileInfo img_rp_fi(img_rp);
-        QString img_basename = img_rp_fi.completeBaseName();
-        QString img_extension = img_rp_fi.suffix();
-        qDebug() << new_param << img_rp << img_basename;
-        QString source_dir_ap = QFileInfo(source).path() + "/" + QFileInfo(source).completeBaseName() + "/";
-        QString img_ap = source_dir_ap + img_rp_fi.fileName();
+        QFileInfo img_path_fi(img_path);
+        QString img_basename = img_path_fi.completeBaseName();
+        QString img_extension = img_path_fi.suffix();
+        qDebug() << new_param << img_path << img_basename;
+        QString img_ap = source_dir_ap + img_path_fi.fileName();
+        if (!img_path.startsWith("./")) {
+            // チルダによるホームフォルダ表記はQtでは使へないから置換
+            QString img_path_tilde_replaced = img_path;
+            img_path_tilde_replaced.replace("~/", QDir::homePath() + "/");
+            if (QFile::copy(img_path_tilde_replaced, img_ap) == false) {
+                QMessageBox::critical(this, "FATAL ERROR", "copy " + img_path + " to " + img_ap + " failed or already exists.");
+            }
+        }
+        QString img_rp = img_ap;
+        img_rp.replace(source_dir_ap, "./");
 
         QString adding_params = "?href=" + img_rp;
         if (thumb) {
-            QString thumbs_dir_ap = source_dir_ap + "_thumbs/";
+            QString thumbs_dir_ap = source_dir_ap + thumbs_dir_name + "/";
             if (QDir(thumbs_dir_ap).exists() == false) {
                 if (QDir().mkdir(thumbs_dir_ap) == false) {
                     QMessageBox::critical(this, "FATAL ERROR", " " + QString(__FILE__) + ":" + QString::number(__LINE__) + "QDir().mkdir(thumbs_dir_ap)");
@@ -225,6 +239,9 @@ void imgedit::edit()
             QString thumb_ap = thumbs_dir_ap + img_basename + thumbnail_suffix + "." + img_extension;
             QString thumb_rp = thumb_ap;
             thumb_rp.replace(source_dir_ap, "./");
+
+            new_param.replace(img_rp, thumb_rp);
+            new_param.replace(img_path, thumb_rp);
 
             QImage img(img_ap);
             if (img.isNull()) {
@@ -243,7 +260,6 @@ void imgedit::edit()
             }
 
             img.save(thumb_ap);
-            new_param.replace(img_rp, thumb_rp);
         }
         else {
             if (width != 0) {
@@ -253,6 +269,8 @@ void imgedit::edit()
             if (height != 0) {
                 adding_params += ("&height=" + QString::number(height));
             }
+
+            new_param.replace(img_path, img_rp);
         }
         new_param += adding_params;
         new_text.replace(p, new_param);
