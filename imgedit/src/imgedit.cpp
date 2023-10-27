@@ -198,9 +198,14 @@ void imgedit::edit()
         QRegularExpression param_re("\\?[^(}})]+");
         QRegularExpressionMatch param_match = param_re.match(p);
         if (param_match.hasMatch()) {
-        new_param.replace(param_match.captured(0), "");
-        qDebug() << new_param;
+            new_param.replace(param_match.captured(0), "");
+            qDebug() << new_param;
         }
+
+        // zimではパスに日本語を含むときパスの先頭にfile://が追加されその上パーセントエンコーディングされる。
+        // file://を取り除き、パーセントエンコーディングをデコードする。
+        new_param.replace("file://", "");
+        new_param = QUrl::fromPercentEncoding(new_param.toUtf8());
 
         QString source_dir_ap = QFileInfo(source).path() + "/" + QFileInfo(source).completeBaseName() + "/";
 
