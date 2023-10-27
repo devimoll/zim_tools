@@ -221,6 +221,11 @@ void imgedit::edit()
             // チルダによるホームフォルダ表記はQtでは使へないから置換
             QString img_path_tilde_replaced = img_path;
             img_path_tilde_replaced.replace("~/", QDir::homePath() + "/");
+            if (QDir(source_dir_ap).exists() == false) {
+                if (QDir().mkdir(source_dir_ap) == false) {
+                    QMessageBox::critical(this, "FATAL ERROR", " " + QString(__FILE__) + ":" + QString::number(__LINE__) + " QDir().mkdir(thumbs_dir_ap)");
+                }
+            }
             if (QFile::copy(img_path_tilde_replaced, img_ap) == false) {
                 QMessageBox::critical(this, "FATAL ERROR", "copy " + img_path + " to " + img_ap + " failed or already exists.");
             }
@@ -233,7 +238,7 @@ void imgedit::edit()
             QString thumbs_dir_ap = source_dir_ap + thumbs_dir_name + "/";
             if (QDir(thumbs_dir_ap).exists() == false) {
                 if (QDir().mkdir(thumbs_dir_ap) == false) {
-                    QMessageBox::critical(this, "FATAL ERROR", " " + QString(__FILE__) + ":" + QString::number(__LINE__) + "QDir().mkdir(thumbs_dir_ap)");
+                    QMessageBox::critical(this, "FATAL ERROR", " " + QString(__FILE__) + ":" + QString::number(__LINE__) + " QDir().mkdir(thumbs_dir_ap)");
                 }
             }
             QString thumb_ap = thumbs_dir_ap + img_basename + thumbnail_suffix + "." + img_extension;
